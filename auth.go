@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
@@ -29,7 +30,15 @@ func Auth(update httprouter.Handle) httprouter.Handle {
 				if err != nil {
 					log.WithFields(log.Fields{"error": "json_error", "string": err.Error()}).Error("Decode error")
 				}
-				if user.Subdomain == "*" || user.Subdomain == postData.Subdomain {
+				if user.Subdomain == "*" {
+					// Accept all
+					userOK = true
+				} else if user.Subdomain == postData.Subdomain {
+					// Accept exact match
+					userOK = true
+				} else if (strings.HasPrefix(user.Subdomain, "*.") &&
+					strings.HasSuffix(postData.Subdomain, strings.TrimPrefix(user.Subdomain, "*."))) {
+					// Accept postdata domain if *.DOMAIN matches
 					userOK = true
 				} else {
 					log.WithFields(log.Fields{"error": "subdomain_mismatch", "name": postData.Subdomain, "expected": user.Subdomain}).Error("Subdomain mismatch")
