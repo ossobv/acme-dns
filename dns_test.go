@@ -182,7 +182,7 @@ func TestResolveTXT(t *testing.T) {
 	}{
 		{atxt.Subdomain, validTXT, true, true},
 		{atxt.Subdomain, "invalid", true, false},
-		{"a097455b-52cc-4569-90c8-7a4b97c6eba8", validTXT, false, false},
+		{"4cb655e2-496d-11e9-8646-d663bd873d93", validTXT, false, false},
 	} {
 		answer, err := resolv.lookup(test.subDomain+".auth.example.org", dns.TypeTXT)
 		if err != nil {

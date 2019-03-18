@@ -174,6 +174,15 @@ func (d *acmedb) NewTXTValuesInTransaction(tx *sql.Tx, subdomain string) error {
 }
 
 func (d *acmedb) Register(afrom cidrslice) (ACMETxt, error) {
+	return d.RegisterCustomDomain(afrom, newSubdomain())
+}
+
+func (d *acmedb) RegisterCustomDomain(afrom cidrslice, subdomain string) (ACMETxt, error) {
+	// Assert lowercase in Subdomain
+	if strings.ToLower(subdomain) != subdomain {
+		panic(subdomain)
+	}
+
 	d.Lock()
 	defer d.Unlock()
 	var err error
@@ -186,12 +195,8 @@ func (d *acmedb) Register(afrom cidrslice) (ACMETxt, error) {
 		}
 		tx.Commit()
 	}()
-	a := newACMETxt()
+	a := newACMETxt(subdomain)
 	a.AllowFrom = cidrslice(afrom.ValidEntries())
-	// Check contract of newACMETxt: it must not generate uppercase domains
-	if strings.ToLower(a.Subdomain) != a.Subdomain {
-		panic(a.Subdomain)
-	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(a.Password), 10)
 	regSQL := `
     INSERT INTO records(
