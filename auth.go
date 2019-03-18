@@ -74,11 +74,9 @@ func getUserFromRequest(r *http.Request) (ACMETxt, error) {
 	if validKey(passwd) {
 		dbuser, err := DB.GetByUsername(username)
 		if err != nil {
-			log.WithFields(log.Fields{"error": err.Error()}).Error("Error while trying to get user")
 			// To protect against timed side channel (never gonna give you up)
 			correctPassword(passwd, "$2a$10$8JEFVNYYhLoBysjAxe2yBuXrkDojBQBkVpXEQgyQyjn43SvJ4vL36")
-
-			return ACMETxt{}, fmt.Errorf("Invalid username: %s", uname)
+			return ACMETxt{}, fmt.Errorf("Invalid username: %s: %s", uname, err.Error())
 		}
 		if correctPassword(passwd, dbuser.Password) {
 			return dbuser, nil
