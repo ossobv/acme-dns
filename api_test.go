@@ -496,6 +496,8 @@ func TestApiManyUpdateCustomDomains(t *testing.T) {
 		{newUserAll.Username.String(), newUserAll.Password, "any-domain.nl", validTxtData, 200},
 		{newUserAll.Username.String(), newUserAll.Password, "201ca5d6-496d-11e9-8646-d663bd873d93", validTxtData, 200},
 		{newUserAll.Username.String(), newUserAll.Password, "example.com", validTxtData, 200},
+		// but invalid subdomains are not allowed, obviously
+		{newUserAll.Username.String(), newUserAll.Password, ".example.com", validTxtData, 400},
 		// example.com allows only exactly that
 		{newUserExampleCom.Username.String(), newUserExampleCom.Password, "example.com", validTxtData, 200},
 		{newUserExampleCom.Username.String(), newUserExampleCom.Password, "random-domain.com", validTxtData, 401},

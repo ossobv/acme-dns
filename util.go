@@ -81,15 +81,6 @@ func generatePassword(length int) string {
 	return string(ret)
 }
 
-func sanitizeDomainQuestion(d string) string {
-	dom := strings.ToLower(d)
-	firstDot := strings.Index(d, ".")
-	if firstDot > 0 {
-		dom = dom[0:firstDot]
-	}
-	return dom
-}
-
 func setupLogging(format string, level string) {
 	if format == "json" {
 		log.SetFormatter(&log.JSONFormatter{})

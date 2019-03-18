@@ -38,11 +38,12 @@ func validSubdomain(s string) bool {
 		MatchString(s) {
 		return true
 	}
+	// The following is not needed, as the regex above matches as well
 	// validate uuid, like "d25989a6-c59a-4670-b294-a8cb0c5ad8d2"
-	_, err := uuid.Parse(s)
-	if err == nil {
-		return true
-	}
+	// _, err := uuid.Parse(s)
+	// if err == nil {
+	// 	return true
+	// }
 	return false
 }
 
