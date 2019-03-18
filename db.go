@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +19,8 @@ import (
 
 // DBVersion shows the database version this code uses. This is used for update checks.
 var DBVersion = 1
+
+// All Domain and Subdomain keys in the database should be stored as ToLower.
 
 var acmeTable = `
 	CREATE TABLE IF NOT EXISTS acmedns(
@@ -185,6 +188,10 @@ func (d *acmedb) Register(afrom cidrslice) (ACMETxt, error) {
 	}()
 	a := newACMETxt()
 	a.AllowFrom = cidrslice(afrom.ValidEntries())
+	// Check contract of newACMETxt: it must not generate uppercase domains
+	if strings.ToLower(a.Subdomain) != a.Subdomain {
+		panic(a.Subdomain)
+	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(a.Password), 10)
 	regSQL := `
     INSERT INTO records(
@@ -250,9 +257,6 @@ func (d *acmedb) GetByUsername(u uuid.UUID) (ACMETxt, error) {
 func (d *acmedb) GetTXTForDomain(domain string) ([]string, error) {
 	d.Lock()
 	defer d.Unlock()
-	// domain = sanitizeString(domain)
-	// ^- breaks readable-subdomains with periods, and it's not
-	//    necessary: the DB abstraction will correct illegal SQL
 	var txts []string
 	getSQL := `
 	SELECT Value FROM txt WHERE Subdomain=$1 LIMIT 2
@@ -266,7 +270,7 @@ func (d *acmedb) GetTXTForDomain(domain string) ([]string, error) {
 		return txts, err
 	}
 	defer sm.Close()
-	rows, err := sm.Query(domain)
+	rows, err := sm.Query(strings.ToLower(domain))
 	if err != nil {
 		return txts, err
 	}
@@ -286,6 +290,11 @@ func (d *acmedb) GetTXTForDomain(domain string) ([]string, error) {
 // When we're autocreating subdomains, we need the 2 records to exist.
 // So, check the COUNT and create the two initial records if needed.
 func (d *acmedb) UpdatePreCreate(a ACMETxt) error {
+	// Assert lowercase in Subdomain
+	if strings.ToLower(a.Subdomain) != a.Subdomain {
+		panic(a.Subdomain)
+	}
+
 	d.Lock()
 	defer d.Unlock()
 	var err error
@@ -315,13 +324,18 @@ func (d *acmedb) UpdatePreCreate(a ACMETxt) error {
 	if err != nil {
 		return err
 	}
-	if count < 1 {  // or < 2 ?
+	if count < 1 { // or < 2 ?
 		err = d.NewTXTValuesInTransaction(tx, domain)
 	}
 	return err
 }
 
 func (d *acmedb) Update(a ACMETxt) error {
+	// Assert lowercase in Subdomain
+	if strings.ToLower(a.Subdomain) != a.Subdomain {
+		panic(a.Subdomain)
+	}
+
 	d.Lock()
 	defer d.Unlock()
 	var err error
@@ -367,6 +381,11 @@ func getModelFromRow(r *sql.Rows) (ACMETxt, error) {
 		log.WithFields(log.Fields{"error": err.Error()}).Error("JSON unmarshall error")
 	}
 	txt.AllowFrom = cslice
+
+	// Test for lowercase in Subdomain
+	if strings.ToLower(txt.Subdomain) != txt.Subdomain {
+		log.WithFields(log.Fields{"subdomain": txt.Subdomain}).Error("Non-lowercase in DB")
+	}
 	return txt, err
 }
 

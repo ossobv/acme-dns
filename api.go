@@ -96,7 +96,7 @@ func webUpdatePost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			log.WithFields(log.Fields{"error": err.Error()}).Debug("Error while trying to precreate records")
 			updStatus = http.StatusInternalServerError
 			upd = jsonError("db_error")
-		// If they exist, update
+			// If they exist, update
 		} else if err := DB.Update(a); err != nil {
 			log.WithFields(log.Fields{"error": err.Error()}).Debug("Error while trying to update record")
 			updStatus = http.StatusInternalServerError

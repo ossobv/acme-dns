@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gavv/httpexpect"
@@ -334,9 +335,19 @@ func TestApiManyUpdateWithCredentials(t *testing.T) {
 	defer server.Close()
 	e := getExpect(t, server)
 	// User without defined CIDR masks
-	newUser, err := DB.Register(cidrslice{})
-	if err != nil {
-		t.Errorf("Could not create new user, got error [%v]", err)
+	var newUser ACMETxt
+	var err error
+	for {
+		newUser, err = DB.Register(cidrslice{})
+		if err != nil {
+			t.Errorf("Could not create new user, got error [%v]", err)
+		}
+		// Ensure that username+password+subdomain all differ when in uppcase
+		if strings.ToUpper(newUser.Username.String()) != newUser.Username.String() &&
+			strings.ToUpper(newUser.Password) != newUser.Password &&
+			strings.ToUpper(newUser.Subdomain) != newUser.Subdomain {
+			break
+		}
 	}
 
 	// User with defined allow from - CIDR masks, all invalid
@@ -369,6 +380,10 @@ func TestApiManyUpdateWithCredentials(t *testing.T) {
 		{newUserWithCIDR.Username.String(), newUserWithCIDR.Password, newUserWithCIDR.Subdomain, validTxtData, 401},
 		{newUserWithValidCIDR.Username.String(), newUserWithValidCIDR.Password, newUserWithValidCIDR.Subdomain, validTxtData, 200},
 		{newUser.Username.String(), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", newUser.Subdomain, validTxtData, 401},
+		// Combinations of bad cAsE
+		{strings.ToUpper(newUser.Username.String()), newUser.Password, newUser.Subdomain, validTxtData, 401},
+		{newUser.Username.String(), strings.ToUpper(newUser.Password), newUser.Subdomain, validTxtData, 401},
+		{newUser.Username.String(), newUser.Password, strings.ToUpper(newUser.Subdomain), validTxtData, 401},
 	} {
 		updateJSON = map[string]interface{}{
 			"subdomain": test.subdomain,

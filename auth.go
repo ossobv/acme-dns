@@ -36,8 +36,8 @@ func Auth(update httprouter.Handle) httprouter.Handle {
 				} else if user.Subdomain == postData.Subdomain {
 					// Accept exact match
 					userOK = true
-				} else if (strings.HasPrefix(user.Subdomain, "*.") &&
-					strings.HasSuffix(postData.Subdomain, strings.TrimPrefix(user.Subdomain, "*."))) {
+				} else if strings.HasPrefix(user.Subdomain, "*.") &&
+					strings.HasSuffix(postData.Subdomain, strings.TrimPrefix(user.Subdomain, "*.")) {
 					// Accept postdata domain if *.DOMAIN matches
 					userOK = true
 				} else {

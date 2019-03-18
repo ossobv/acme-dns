@@ -138,10 +138,7 @@ func (d *DNSServer) answeringForDomain(name string) bool {
 }
 
 func (d *DNSServer) isAuthoritative(q dns.Question) bool {
-	if d.answeringForDomain(q.Name) {
-		return true
-	}
-	domainParts := strings.Split(strings.ToLower(q.Name), ".")
+	domainParts := strings.Split(q.Name, ".")
 	for i := range domainParts {
 		if d.answeringForDomain(strings.Join(domainParts[i:], ".")) {
 			return true
@@ -153,13 +150,13 @@ func (d *DNSServer) isAuthoritative(q dns.Question) bool {
 // Check all our domains, and see if this is a subdomain. If so, return
 // the subdomain part.
 func (d *DNSServer) extractSubdomain(name string) string {
-	domainParts := strings.Split(strings.ToLower(name), ".")
+	domainParts := strings.Split(name, ".")
 	for i := range domainParts {
 		if d.answeringForDomain(strings.Join(domainParts[i:], ".")) {
 			return strings.Join(domainParts[0:i], ".")
 		}
 	}
-	return "*"  // invalid
+	return "*" // invalid
 }
 
 func (d *DNSServer) answer(q dns.Question) ([]dns.RR, int, bool, error) {
