@@ -34,7 +34,7 @@ So basically it boils down to **accessibility** and **security**.
 
 ## Usage
 
-A Certbot authentication hook for acme-dns is available at: [https://github.com/joohoi/acme-dns-certbot](https://github.com/joohoi/acme-dns-certbot).
+A Certbot authentication hook for acme-dns is available at: `./acme-dns-auth-ossobv.py`
 
 [![asciicast](https://asciinema.org/a/94903.png)](https://asciinema.org/a/94903)
 
