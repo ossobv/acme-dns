@@ -48,12 +48,18 @@ func validSubdomain(s string) bool {
 }
 
 func validTXT(s string) bool {
-	sn := sanitizeString(s)
-	if utf8.RuneCountInString(s) == 43 && utf8.RuneCountInString(sn) == 43 {
-		// 43 chars is the current LE auth key size, but not limited / defined by ACME
-		return true
+	//sn := sanitizeString(s)
+	re, _ := regexp.Compile("[^A-Za-z0-9_.-]+")
+	sn := re.ReplaceAllString(s, "")
+	if s != sn {
+		return false
 	}
-	return false
+	// expect one or more times 43 chars, separated by dots
+	count := utf8.RuneCountInString(s)
+	if ((count + 1) % 44) != 0 {
+		return false
+	}
+	return true
 }
 
 func correctPassword(pw string, hash string) bool {
